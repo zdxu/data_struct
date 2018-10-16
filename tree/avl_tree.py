@@ -11,14 +11,17 @@ class ShowNode:
 
 
 class Node:
-    def __init__(self, p_node, l_node, r_node, l_height, r_height, val):
+    def __init__(self, p_node, l_node, r_node, l_height, r_height, val, type):
         self.p_node = p_node
         self.l_node = l_node
         self.r_node = r_node
-        self.l_height = l_height #左子树高度
-        self.r_height = r_height #右子树高度
+        # 左子树高度
+        self.l_height = l_height
+        # 右子树高度
+        self.r_height = r_height
         self.val = val
-        self.type = None #0 左结点 右结点
+        # 0 左结点 右结点
+        self.type = type
 
 
 class AVLTree:
@@ -26,11 +29,27 @@ class AVLTree:
         self.root = None
 
     def insert(self, val):
-        node = Node(None, None, None, 0, 0, val)
+        node = Node(None, None, None, 0, 0, val, None)
         if self.root is None:
             self.root = node
         else:
-            self.__insert(self.root, node)
+            tree_node = self.root
+            temp_node = None
+            while tree_node is not None:
+                if tree_node.val > val:
+                    temp_node = tree_node
+                    tree_node = tree_node.l_node
+                else:
+                    temp_node = tree_node
+                    tree_node = tree_node.r_node
+            node.p_node = temp_node
+            if temp_node.val > val:
+                node.type = 0
+                temp_node.l_node = node
+            else:
+                node.type = 1
+                temp_node.r_node = node
+        self.__balance_tree(node, 1)
 
     def __insert(self, tree_node, node):
         if tree_node.val > node.val:
@@ -67,9 +86,12 @@ class AVLTree:
         r_node = tree_node.r_node
         if r_node.l_node is None:
             tree_node.r_height = 0
+            tree_node.r_node = None
         else:
             tree_node.r_height = self.__max_height(r_node.l_node) + 1
-        tree_node.r_node = r_node.l_node
+            tree_node.r_node = r_node.l_node
+            tree_node.r_node.type = 1
+            tree_node.r_node.p_node = tree_node
         tree_node.p_node = r_node
         r_node.p_node = p_node
         r_node.l_node = tree_node
@@ -89,9 +111,12 @@ class AVLTree:
         l_node = tree_node.l_node
         if l_node.r_node is None:
             tree_node.l_height = 0
+            tree_node.l_node = None
         else:
             tree_node.l_height = self.__max_height(l_node.r_node) + 1
-        tree_node.l_node = l_node.r_node
+            tree_node.l_node = l_node.r_node
+            tree_node.l_node.type = 0
+            tree_node.l_node.p_node = tree_node
         tree_node.p_node = l_node
         l_node.p_node = p_node
         l_node.r_node = tree_node
@@ -110,13 +135,16 @@ class AVLTree:
         return max(tree_node.l_height, tree_node.r_height)
 
     def __rotate(self, tree_node):
+        # 左子树高 > 右子树，差为 2
         if tree_node.l_height - tree_node.r_height == 2:
             self.__right_rotate(tree_node)
             return 0
+        # 左子树高 < 右子树，差为 2
         elif tree_node.l_height - tree_node.r_height == -2:
             self.__left_rotate(tree_node)
             return 0
         if tree_node.type == 0:
+            # 左结点的右子树 > 左结点的左子树，差为 1
             if tree_node.l_height - tree_node.r_height == -1:
                 self.__left_rotate(tree_node)
                 return 1
@@ -125,16 +153,82 @@ class AVLTree:
         if tree_node.type == 1:
             if tree_node.l_height - tree_node.r_height == -1:
                 return 1
+            # 右结点的左子树 > 右结点的右子树，差为 1
             if tree_node.l_height - tree_node.r_height == 1:
                 self.__right_rotate(tree_node)
                 return 1
         return 0
 
     def remove(self, val):
-        pass
+        key_node = self.search(val)
+        if key_node is None:
+            raise Exception('node is not exist')
+
+        if self.root == key_node:
+            self.root = None
+
+        p_node = key_node.p_node
+        l_node = key_node.l_node
+        node = self.get_last_left_node(key_node.r_node)
+        if node is None:
+            l_node.p_node = p_node
+            if key_node.type == 0:
+                p_node.l_node = l_node
+            elif key_node.type == 1:
+                p_node.r_node = l_node
+            else:
+                self.root = l_node
+        else:
+            key_node.p_node = node.p_node
+            node.p_node = p_node
+            node.l_node = l_node
+            node.r_node = key_node.r_node
+            node.l_height = key_node.l_height
+            node.r_height = key_node.r_height
+            if key_node.type == 0:
+                p_node.l_node = node
+            elif key_node.type == 1:
+                p_node.r_node = node
+            else:
+                self.root = node
+            if node.type == 0:
+                key_node.p_node.l_node = None
+            else:
+                key_node.p_node.r_node = None
+
+        self.__balance_tree(key_node, -1)
+
+    def __balance_tree(self, tree_node, val):
+        flag = True
+        p_node = tree_node.p_node
+        while p_node is not None and flag:
+            node_type = tree_node.type
+            tree_node = p_node
+            if node_type == 0:
+                tree_node.l_height = tree_node.l_height + val
+            else:
+                tree_node.r_height = tree_node.r_height + val
+            p_node = tree_node.p_node
+            if 0 == self.__rotate(tree_node):
+                flag = False
 
     def search(self, val):
-        pass
+        tree_node = self.root
+        while tree_node is not None:
+            if tree_node.val > val:
+                tree_node = tree_node.l_node
+            elif tree_node.val < val:
+                tree_node = tree_node.r_node
+            else:
+                return tree_node
+        return None
+
+    def get_last_left_node(self, tree_node):
+        if tree_node is None:
+            return None
+        while tree_node.l_node is not None:
+            tree_node = tree_node.l_node
+        return tree_node
 
     def print_tree(self):
         arr = []
@@ -160,13 +254,25 @@ if __name__ == '__main__':
     avl_tree.insert(5)
     avl_tree.insert(8)
     avl_tree.insert(3)
-    avl_tree.insert(4)
-    avl_tree.insert(10)
-    avl_tree.insert(12)
+    avl_tree.insert(14)
+    avl_tree.insert(15)
+    avl_tree.insert(16)
+    avl_tree.insert(8)
+    avl_tree.insert(3)
     avl_tree.insert(14)
     avl_tree.insert(15)
     avl_tree.insert(16)
     avl_tree.insert(17)
+    avl_tree.insert(4)
+    avl_tree.insert(8)
+    avl_tree.insert(3)
+    avl_tree.insert(14)
+    avl_tree.insert(15)
+    avl_tree.insert(16)
+    avl_tree.insert(10)
+    avl_tree.insert(12)
+
+    avl_tree.remove(8)
 
     avl_tree.print_tree()
 
