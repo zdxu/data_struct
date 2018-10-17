@@ -2,22 +2,14 @@
 
 if __name__ == '__main__':
 
-    print "test"
-    map_data = {"key": "val"}
-    print map_data
-    print "test ..."
+    print " head content ..."
 
-    # print map_data # test ...
+    print " head content ..."
 
-    # 测试看看
+    print " head content ..."
 
-    map_data = {"key": "val"}
-    print map_data
-    print "test ..."
+    print " head content ..."
 
-    # del map_data['key1']
-    print(map_data)
+    print " head content ..."
 
-    map_data = {"key": "val"}
-    print map_data
-    print "test ..."
+    print " head content ..."
