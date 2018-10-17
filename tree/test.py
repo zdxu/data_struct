@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
 if __name__ == '__main__':
-    print "test 。。。"
-
-if __name__ == '__main__':
     map_data = {"key": "val"}
     print(map_data)
 
