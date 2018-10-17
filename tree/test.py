@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 if __name__ == '__main__':
+
+    print "test"
     map_data = {"key": "val"}
-    print map_data
+    # print map_data # test ...
 
     # 测试看看
 
