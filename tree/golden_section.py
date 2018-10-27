@@ -34,4 +34,4 @@ if __name__ == '__main__':
         arr.append(i)
     print(method(arr, 48.6))
 
-# n * 0.618^? = 1  =>       git test     hhh  。。。。     (1/0.618)^? = n => log (1.618) (n)
+# n * 0.618^? = 1  =>       git test     hhh  aaa       (1/0.618)^? = n => log (1.618) (n)
