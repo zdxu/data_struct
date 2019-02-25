@@ -7,9 +7,10 @@
 # 4结点 一个结点可以有三个元素，4个子结点
 
 # 插入
+# 若插入结点的父结点为4结点，则父结点先发生裂变，然后在将元素插入结点
 # 插入结点低于4结点，直接插入
 #        属于4结点，结点发生裂变，中间元素移入父结点，剩余元素裂变为2个子结点，
-# 然后将元素插入某一子结点，对于中间元素移入父结点就相当于一次对父结点的插入
+# 然后将元素插入某一子结点
 
 # 类比 红黑树
 #          8     ->     12                                       12（黑）
@@ -32,52 +33,79 @@ class Node:
         self.sub_nodes = sub_nodes
 
 
-def search(tree_node, val):
-    if tree_node.elements:
-        for i in range(len(tree_node.elements)):
-            if tree_node.elements[i] > val:
-                if i < len(tree_node.sub_tree_nodes):
-                    tree_node = tree_node.sub_nodes[i]
-                    return search(tree_node, val)
-                else:
-                    return tree_node
-            if tree_node.elements[i] < val:
-                if i + 1 < len(tree_node.sub_tree_nodes):
-                    tree_node = tree_node.sub_nodes[i + 1]
-                    return search(tree_node, val)
-                else:
-                    return tree_node
-            if tree_node.elements[i] == val:
-                return tree_node
-    return tree_node
+class Tree:
+    def __init__(self):
+        self.root = None
 
+    def search(self, val, sub_node=None):
+        if sub_node is None:
+            sub_node = self.root
+        if sub_node.elements:
+            for i in range(len(sub_node.elements)):
+                if sub_node.elements[i] > val:
+                    if i < len(sub_node.sub_tree_nodes):
+                        sub_node = sub_node.sub_nodes[i]
+                        return self.search(val, sub_node)
+                    return sub_node
+                if sub_node.elements[i] < val:
+                    if i + 1 < len(sub_node.sub_nodes):
+                        sub_node = sub_node.sub_nodes[i + 1]
+                        return self.search(val, sub_node)
+                    return sub_node
+                if sub_node.elements[i] == val:
+                    return sub_node
+        return None
 
-def insert(tree_node, val):
-    tree_node = search(tree_node, val)
-    if len(tree_node.elements) < 3:
+    def insert(self, val, sub_node=None):
+        if sub_node is None:
+            if self.root is None:
+                self.root = Node([val])
+                return
+            sub_node = self.root
+            sub_node = self.search(val, sub_node)
+        if len(sub_node.elements) < 3:
+            self.element_insert_to_node(val, sub_node)
+        else:
+            sub_1 = Node([sub_node.elements[0]])
+            sub_2 = Node([sub_node.elements[2]])
+
+            if sub_node.parent is None:
+                self.root = Node([sub_node.elements[1]], None, [sub_1, sub_2])
+                parent_node = self.root
+            else:
+                parent_node = sub_node.parent
+                if len(parent_node.elements) == 3:
+                    self.insert(parent_node, sub_node.elements[1])
+                else:
+                    self.element_insert_to_node(sub_node.elements[1], parent_node)
+                for node in parent_node.sub_nodes:
+                    if node is sub_node:
+                        parent_node.sub_nodes.remove(node)
+                        parent_node.sub_nodes.append(sub_1)
+                        parent_node.sub_nodes.append(sub_2)
+
+            if val <= sub_node.elements[1]:
+                self.element_insert_to_node(val, sub_1)
+            else:
+                self.element_insert_to_node(val, sub_2)
+            sub_1.parent = parent_node
+            sub_2.parent = parent_node
+
+    @staticmethod
+    def element_insert_to_node(val, tree_node):
         for i in range(len(tree_node.elements)):
             if tree_node.elements[i] >= val:
-                tree_node.elements = tree_node.elements[0:i] + [val] + tree_node.elements[i:len(tree_node.elements)]
+                tree_node.elements = tree_node.elements[0:i + 1] + [val] + tree_node.elements[i:len(tree_node.elements)]
             if tree_node.elements[i] < val and i == len(tree_node.elements) - 1:
-                tree_node.elements = tree_node.elements[0:i] + [val]
-    else:
-        sub_1 = Node([tree_node.elements[0]])
-        sub_2 = Node([tree_node.elements[2]])
-        if val <= tree_node.elements[0]:
-            node = Node()
-            node.
-
-        if tree_node.parent is None:
-            parent = Node([tree_node.elements[1]], None, [sub_1, sub_2])
-            return
-        else:
-            insert(tree_node.parent, tree_node.elements[1])
-
-
-
-
+                tree_node.elements = tree_node.elements[0:i + 1] + [val]
 
 if __name__ == '__main__':
-    node = Node([], None, [])
+    tree = Tree()
+    tree.insert(1)
+    tree.insert(2)
+    tree.insert(3)
+    tree.insert(4)
+    tree.insert(5)
+    tree.insert(6)
 
 
