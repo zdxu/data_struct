@@ -12,7 +12,11 @@
 #        属于4结点，结点发生裂变，中间元素移入父结点，剩余元素裂变为2个子结点，
 # 然后将元素插入某一子结点
 
-# 删除
+# 删除元素
+# 找到要删除元素，然后用其后继结点的最小元素对其进行替换，然后转换成删除其前继结点的最大元素删除
+# 1、删除元素所在结点元素有多个，直接删除
+# 2、删除元素所在结点只有一个元素，需要将其父级结点的大于它的最小元素移入至其右侧的第一个同级结点中，若无比它大的元素，则直接将父结点中的最
+# 大元素移入其左侧的第一个同级结点中(等同于插入元素)，然后删除结点及其结点间关系，若父结点也只有一个结点，则按照同理进行处理。
 
 # 类比 红黑树
 #          8     ->     12                                       12（黑）
@@ -39,24 +43,45 @@ class Tree:
     def __init__(self):
         self.root = None
 
-    def search(self, val, sub_node=None):
+    def search_node(self, val):
+        node = self.search_near_node(val)
+        if node:
+            for element in node.elements:
+                if element == val:
+                    return node
+        return None
+
+    def search_near_node(self, val, sub_node=None):
         if sub_node is None:
             sub_node = self.root
-        if sub_node.elements:
+        if sub_node.sub_nodes:
             for i in range(len(sub_node.elements)):
                 if sub_node.elements[i] > val:
-                    if i < len(sub_node.sub_tree_nodes):
-                        sub_node = sub_node.sub_nodes[i]
-                        return self.search(val, sub_node)
-                    return sub_node
-                if sub_node.elements[i] < val:
-                    if i + 1 < len(sub_node.sub_nodes):
-                        sub_node = sub_node.sub_nodes[i + 1]
-                        return self.search(val, sub_node)
-                    return sub_node
+                    break
                 if sub_node.elements[i] == val:
                     return sub_node
-        return None
+            if sub_node.elements[i] > val:
+                sub_node = sub_node.sub_nodes[i]
+                return self.search_near_node(val, sub_node)
+            else:
+                sub_node = sub_node.sub_nodes[i + 1]
+                return self.search_near_node(val, sub_node)
+        return sub_node
+
+    def search_successor_node(self, val, node):
+        if not node.sub_nodes:
+            return node
+        i = 0
+        for element in node.elements:
+            if element == val:
+                break
+            i = i + 1
+        sub_node = node.sub_nodes[i + 1]
+        if not sub_node.sub_nodes:
+            return sub_node
+        while sub_node.sub_nodes:
+            sub_node = sub_node.sub_nodes[0]
+        return sub_node
 
     def insert(self, val, sub_node=None):
         if sub_node is None:
@@ -64,9 +89,10 @@ class Tree:
                 self.root = Node([val])
                 return
             sub_node = self.root
-            sub_node = self.search(val, sub_node)
+            sub_node = self.search_near_node(val, sub_node)
         if len(sub_node.elements) < 3:
             self.element_insert_to_node(val, sub_node)
+            return
         else:
             sub_1 = Node([sub_node.elements[0]])
             sub_2 = Node([sub_node.elements[2]])
@@ -96,18 +122,66 @@ class Tree:
     @staticmethod
     def element_insert_to_node(val, tree_node):
         for i in range(len(tree_node.elements)):
-            if tree_node.elements[i] >= val:
-                tree_node.elements = tree_node.elements[0:i + 1] + [val] + tree_node.elements[i:len(tree_node.elements)]
-            if tree_node.elements[i] < val and i == len(tree_node.elements) - 1:
-                tree_node.elements = tree_node.elements[0:i + 1] + [val]
+            if tree_node.elements[i] > val:
+                break
+        if tree_node.elements[i] >= val:
+            tree_node.elements = tree_node.elements[0:i] + [val] + tree_node.elements[i:len(tree_node.elements)]
+        if tree_node.elements[i] < val and i == len(tree_node.elements) - 1:
+            tree_node.elements = tree_node.elements[0:i + 1] + [val]
+
+    def element_delete(self, val, node=None):
+        if node is None:
+            if not self.search_node(val):
+                return
+            node = self.search_near_node(val)
+            successor_node = self.search_successor_node(val, node)
+            if node is not successor_node:
+                i = 0
+                for element in node.elements:
+                    if element == val:
+                        node.elements[i] = successor_node.elements[0]
+                    i = i + 1
+                node = successor_node
+                val = successor_node.elements[0]
+        if len(node.elements) > 1:
+            i = 0
+            for element in node.elements:
+                if element == val:
+                    del node.elements[i]
+                i = i + 1
+        else:
+            i = 0
+            parent_node = node.parent
+            for sub_node in parent_node.sub_nodes:
+                if sub_node is node:
+                    break
+                i = i + 1
+            if i < len(parent_node.sub_nodes) - 1:
+                element = parent_node.elements[i]
+                del parent_node.elements[i]
+                self.insert(element, parent_node.sub_nodes[i + 1])
+            else:
+                element = parent_node.elements[i - 1]
+                del parent_node.elements[i - 1]
+                self.insert(element, parent_node.sub_nodes[i - 1])
+            del parent_node.sub_nodes[i]
 
 if __name__ == '__main__':
     tree = Tree()
     tree.insert(1)
-    tree.insert(2)
+    tree.insert(20)
     tree.insert(3)
-    tree.insert(4)
+    tree.insert(10)
     tree.insert(5)
-    tree.insert(6)
+    tree.insert(34)
+    tree.insert(7)
+    tree.insert(8)
+
+    tree.element_delete(8)
+
+    tree.insert(8)
+
+    print tree
+
 
 
