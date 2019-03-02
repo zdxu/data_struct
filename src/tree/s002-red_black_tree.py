@@ -39,26 +39,6 @@
 #       红       黑       这种情况同方法1
 
 
-#       叔叔结点是红色，插入结点维持红色不变，将父结点及叔叔结点置为黑色，若祖父结点不为根结点置为红色，
-
-# ---- 若祖父结点的父结点为黑色，插入结束
-
-# ---- 若祖父结点的父结点为红色，以祖父结点为当前结点
-
-# ---- 若无叔叔结点或叔叔结点也为红色时，重复步骤一
-
-# ---- 若叔叔结点为黑色，当前结点为右子结点
-# 步骤二：以当前结点为支点左旋，然后以祖父结点为当前结点
-# ---- 当前结点为左子结点且祖父结点为红色，叔叔结点为黑色
-# 步骤三：以当前结点为支点右旋，然后以祖父结点为当前结点
-# 。。。
-
-# ----  若叔叔结点为黑色，当前结点为左子结点
-# 上述右子结点的步骤二、三调换顺序
-
-# 步骤四：判断根结点是否是黑色，非黑色则置黑，插入结束
-
-
 # 删除最终都转换成了，树尾结点替换并删除树尾结点
 
 # 步骤-：查找树尾替换结点
@@ -71,3 +51,130 @@
 #    2 叔结点有两个子结点 以父结点为当前结点旋转，树尾结点置红 + 新插入叔结点的一个子结点
 # 黑 黑 红
 #
+
+
+class Node:
+    def __init__(self, val):
+        self.val = val
+        self.color = 0                  # 0 红 1 黑
+        self.left_node = None
+        self.right_node = None
+        self.parent = None
+
+
+class Tree:
+    def __init__(self):
+        self.root = None
+
+    def search(self, val):
+        sub_node = self.root
+        while sub_node:
+            if sub_node.val == val:
+                return sub_node
+            if sub_node.val < val:
+                sub_node = sub_node.left_node
+            if sub_node.val > val:
+                sub_node = sub_node.right_node
+        return None
+
+    @staticmethod
+    def search_successor_node(node):
+        ret = node
+        sub_node = node.left_node
+        while sub_node:
+            ret = sub_node
+            if sub_node.right_node:
+                sub_node = sub_node.right_node
+        return ret
+
+    @staticmethod
+    def search_near_node(root, val):
+        ret = root
+        sub_node = root
+        while sub_node:
+            ret = sub_node
+            if sub_node.val <= val:
+                sub_node = sub_node.right_node
+            else:
+                sub_node = sub_node.left_node
+        return ret
+
+    def insert_node(self, in_node, node=None):
+        if not node:
+            if self.root is None:
+                in_node.color = 1
+                self.root = in_node
+                return
+            node = Tree.search_near_node(self.root, in_node.val)
+        if node.color == 1:
+            Tree.combination_node(node, in_node)
+            if self.root.parent:
+                in_node.color = 1
+                in_node.parent = None
+                self.root = in_node
+        else:
+            parent = node.parent
+            if parent.left_node is None or parent.right_node is None\
+                    or parent.left_node.color == 1 or parent.right_node.color == 1:
+                Tree.combination_node(node, in_node)
+                if parent.left_node:
+                    current_node = parent.left_node
+                else:
+                    current_node = parent.right_node
+                if parent.parent:
+                    current_node.parent = parent.parent
+                    if parent.parent.left_node == parent:
+                        parent.parent.left_node = parent.left_node
+                    else:
+                        parent.parent.right_node = parent.right_node
+                else:
+                    self.root = current_node
+                current_node.right_node = parent
+                parent.color = 0
+                parent.left_node = None
+            else:
+                parent.left_node.color = 1
+                parent.right_node.color = 1
+                Tree.combination_node(node, in_node)
+                if parent.parent:
+                    self.insert_node(parent, parent.parent)
+
+    @staticmethod
+    def combination_node(node, in_node):
+        if node.val >= in_node.val:
+            in_node.parent = node
+            in_node.color = 0
+            node.left_node = in_node
+        elif node.left_node and node.left_node.color == 0:
+            in_node.parent = node
+            in_node.color = 0
+            node.right_node = in_node
+        else:
+            if node.parent:
+                in_node.parent = node.parent
+                if node.parent.left_node == node:
+                    node.parent.left_node = in_node
+                else:
+                    node.parent.right_node = in_node
+            in_node.parent = node.parent
+            node.parent = in_node
+            node.color = 0
+            node.right_node = in_node.left_node
+            in_node.color = 1
+            in_node.left_node = node
+
+    def delete(self, val):
+        pass
+
+if __name__ == '__main__':
+    tree = Tree()
+    tree.insert_node(Node(1))
+    tree.insert_node(Node(2))
+    tree.insert_node(Node(3))
+    tree.insert_node(Node(4))
+    tree.insert_node(Node(5))
+    tree.insert_node(Node(6))
+    tree.insert_node(Node(7))
+    tree.insert_node(Node(8))
+
+    print tree

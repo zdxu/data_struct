@@ -68,7 +68,8 @@ class Tree:
                 return self.search_near_node(val, sub_node)
         return sub_node
 
-    def search_successor_node(self, val, node):
+    @staticmethod
+    def search_successor_node(val, node):
         if not node.sub_nodes:
             return node
         i = 0
