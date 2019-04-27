@@ -84,51 +84,55 @@ class Tree:
             sub_node = sub_node.sub_nodes[0]
         return sub_node
 
-    def insert(self, val, sub_node=None):
-        if sub_node is None:
+    def insert(self, val, node=None):
+        if node is None:
             if self.root is None:
                 self.root = Node([val])
                 return
-            sub_node = self.root
-            sub_node = self.search_near_node(val, sub_node)
-        if len(sub_node.elements) < 3:
-            self.element_insert_to_node(val, sub_node)
+            node = self.root
+            node = self.search_near_node(val, node)
+        if len(node.elements) < 3:
+            self.element_insert_to_node(val, node)
             return
         else:
-            sub_1 = Node([sub_node.elements[0]])
-            sub_2 = Node([sub_node.elements[2]])
+            sub_1 = Node([node.elements[0]])
+            sub_2 = Node([node.elements[2]])
+            if node.sub_nodes:
+                sub_1.sub_nodes = node.sub_nodes[0:2]
+                sub_2.sub_nodes = node.sub_nodes[2:4]
 
-            if sub_node.parent is None:
-                self.root = Node([sub_node.elements[1]], None, [sub_1, sub_2])
+            if node.parent is None:
+                self.root = Node([node.elements[1]], None, [sub_1, sub_2])
                 parent_node = self.root
             else:
-                parent_node = sub_node.parent
+                parent_node = node.parent
                 if len(parent_node.elements) == 3:
-                    self.insert(parent_node, sub_node.elements[1])
+                    self.insert(node.elements[1], parent_node)
                 else:
-                    self.element_insert_to_node(sub_node.elements[1], parent_node)
-                for node in parent_node.sub_nodes:
-                    if node is sub_node:
-                        parent_node.sub_nodes.remove(node)
-                        parent_node.sub_nodes.append(sub_1)
-                        parent_node.sub_nodes.append(sub_2)
+                    self.element_insert_to_node(node.elements[1], parent_node)
 
-            if val <= sub_node.elements[1]:
+                parent_node.sub_nodes.remove(node)
+                parent_node.sub_nodes.append(sub_1)
+                parent_node.sub_nodes.append(sub_2)
+
+            if val <= node.elements[1]:
                 self.element_insert_to_node(val, sub_1)
+                node.sub_nodes = sub_1.sub_nodes
             else:
                 self.element_insert_to_node(val, sub_2)
+                node.sub_nodes = sub_2.sub_nodes
             sub_1.parent = parent_node
             sub_2.parent = parent_node
 
     @staticmethod
-    def element_insert_to_node(val, tree_node):
-        for i in range(len(tree_node.elements)):
-            if tree_node.elements[i] > val:
+    def element_insert_to_node(val, node):
+        for i in range(len(node.elements)):
+            if node.elements[i] > val:
                 break
-        if tree_node.elements[i] >= val:
-            tree_node.elements = tree_node.elements[0:i] + [val] + tree_node.elements[i:len(tree_node.elements)]
-        if tree_node.elements[i] < val and i == len(tree_node.elements) - 1:
-            tree_node.elements = tree_node.elements[0:i + 1] + [val]
+        if node.elements[i] >= val:
+            node.elements = node.elements[0:i] + [val] + node.elements[i:len(node.elements)]
+        if node.elements[i] < val and i == len(node.elements) - 1:
+            node.elements = node.elements[0:i + 1] + [val]
 
     def element_delete(self, val, node=None):
         if node is None:
@@ -159,24 +163,26 @@ class Tree:
                 i = i + 1
             if i < len(parent_node.sub_nodes) - 1:
                 element = parent_node.elements[i]
-                del parent_node.elements[i]
+                self.element_delete(element, parent_node)
                 self.insert(element, parent_node.sub_nodes[i + 1])
             else:
                 element = parent_node.elements[i - 1]
-                del parent_node.elements[i - 1]
+                self.element_delete(element, parent_node)
                 self.insert(element, parent_node.sub_nodes[i - 1])
             del parent_node.sub_nodes[i]
 
 if __name__ == '__main__':
     tree = Tree()
     tree.insert(1)
-    tree.insert(20)
+    tree.insert(2)
     tree.insert(3)
-    tree.insert(10)
+    tree.insert(4)
     tree.insert(5)
-    tree.insert(34)
+    tree.insert(6)
     tree.insert(7)
     tree.insert(8)
+    tree.insert(9)
+    tree.insert(10)
 
     tree.element_delete(8)
 

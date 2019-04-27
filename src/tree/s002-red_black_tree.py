@@ -164,7 +164,35 @@ class Tree:
             in_node.left_node = node
 
     def delete(self, val):
-        pass
+        node = self.search(val)
+        if not node:
+            return
+        parent = node.parent
+        if not parent:
+            self.root = None
+            return
+        successor_node = Tree.search_successor_node(node)
+        if successor_node == node:
+            if not parent:
+                self.root = node.left_node
+                node.left_node.parent = None
+            else:
+                if parent.left_node == successor_node:
+                    parent.left_node = node.left_node
+                else:
+                    parent.right_node = node.left_node
+                node.left_node = parent
+            return
+        node.val = successor_node.val
+        if successor_node.color == 0:
+            parent = successor_node.parent
+            if parent.left_node == successor_node:
+                parent.left_node = None
+            else:
+                parent.right_node = None
+            return
+
+
 
 if __name__ == '__main__':
     tree = Tree()
